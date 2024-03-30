@@ -1,0 +1,21 @@
+# --- Set server timezone
+SetEnv TZ America/New_York
+
+ServerSignature Off
+Options +FollowSymLinks
+
+# --- Disable directory browsing
+Options All -Indexes
+Options -MultiViews
+AddDefaultCharset UTF-8
+FileETag none
+
+# --- Turn mod_rewrite on
+RewriteEngine on
+RewriteBase /
+
+# --- Prevent viewing of .htaccess file
+# Adapted from https://perishablepress.com/improve-site-security-by-protecting-htaccess-files/
+<Files ~ "^.*\.([Hh][Tt][Aa])">
+    Require all denied
+</Files>
