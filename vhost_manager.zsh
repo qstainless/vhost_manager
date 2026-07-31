@@ -5,6 +5,7 @@ export SitesDir="${HOME}/Sites"
 
 # If you follow the setup guide mentioned in the README, this should be where your vhosts live
 export VHostsDir="/opt/homebrew/etc/httpd/vhosts"
+export SSLDir="/opt/homebrew/etc/httpd/ssl"
 
 # Define variables for better readability
 export ColorWhite="\033[1;37m"   # White
@@ -132,8 +133,6 @@ deleteVirtualHost() {
     return
   fi
 
-  local DocRoot="${SitesDir}/${siteUrl}"
-
   # Confirm deletion with the user
   printf "\nYou are about to delete the virtual host for %b%s%b. Continue? [y/N]: " \
     "${ColorWhite}" "${siteUrl}" "${ColorReset}"
@@ -150,11 +149,12 @@ deleteVirtualHost() {
     "${ColorWhite}" "${siteUrl}" "${ColorReset}"
 
   rm -Rf "${VHostsDir}/${siteUrl}.conf"
+  rm -f "${SSLDir}/${siteUrl}.pem" "${SSLDir}/${siteUrl}-key.pem"
 
   printf "\nMoving %b%s%b to the trash.\n" \
-    "${ColorWhite}" "${DocRoot}" "${ColorReset}"
+    "${ColorWhite}" "${SitesDir}/${siteUrl}" "${ColorReset}"
 
-  command mv "${DocRoot}" ~/.Trash
+  command mv "${SitesDir}/${siteUrl}" ~/.Trash
 
   # Restart services
   restartServices
@@ -180,6 +180,51 @@ checkVhost() {
   fi
 }
 
+generateSslCertificate() {
+  local siteUrl="${1}"
+  local certFile="${SSLDir}/${siteUrl}.pem"
+  local keyFile="${SSLDir}/${siteUrl}-key.pem"
+
+  if ! command -v mkcert >/dev/null 2>&1; then
+    printf "\n%bError:%b mkcert is required to create the SSL certificate for %b%s%b.\n" \
+      "${ColorWhite}" "${ColorReset}" "${ColorWhite}" "${siteUrl}" "${ColorReset}"
+    printf "Install mkcert first, then rerun this command.\n"
+    return 1
+  fi
+
+  mkdir -p "${SSLDir}"
+
+  if ! mkcert \
+    -cert-file "${certFile}" \
+    -key-file "${keyFile}" \
+    "${siteUrl}" \
+    "www.${siteUrl}"; then
+    printf "\n%bError:%b Failed to create the SSL certificate for %b%s%b.\n" \
+      "${ColorWhite}" "${ColorReset}" "${ColorWhite}" "${siteUrl}" "${ColorReset}"
+    return 1
+  fi
+}
+
+addStarterFilesAndVhostConfig() {
+  local siteUrl="${1}"
+  local docRoot="${2}"
+  local logsDir="${3}"
+  local templateDir="${4}"
+
+  # Replace the site placeholder in the copied index file
+  createIndexFile "${siteUrl}" "${templateDir}" "${docRoot}"
+
+  # Create the log files
+  touch "${logsDir}/${siteUrl}-access.log" "${logsDir}/${siteUrl}-error.log"
+
+  # Set permissions
+  chown -R "${USER}:staff" "${docRoot}"
+
+  # Create the vhost configuration file
+  run_with_spinner "Writing Apache configuration for ${siteUrl}" \
+    createVhostConfig "${siteUrl}" "${docRoot}" "${templateDir}"
+}
+
 createVirtualHost() {
   # Extract site name and check for an extension
   setSiteUrl "${1}"
@@ -199,20 +244,16 @@ createVirtualHost() {
   printf "\nAdding vhost %b%s%b...\n" \
     "${ColorWhite}" "${SiteUrl}" "${ColorReset}"
 
-  # Create the document root directory
-  checkDir "${DocRoot}"
-  chown -R "${USER}:staff" "${SitesDir}/${SiteUrl}/"
+  # Create the host root
+  checkDir "${SitesDir}/${SiteUrl}"
+  # Copy the public template to create the document root directory
+  cp -R "${TemplateDir}/public" "${DocRoot}"
 
   # Create index.php from template
   sed "s|@SiteUrl@|$SiteUrl|g" "${TemplateDir}/index.tpl" >"${DocRoot}/index.php"
 
-  # Create .htaccess and info.php
-  cp "${TemplateDir}/htaccess" "${DocRoot}/.htaccess"
-  cp "${TemplateDir}/info.php" "${DocRoot}"
-
-  # Create the vhost configuration file
-  local vhost_config="${TemplateDir}/httpd_vhost_config.tpl"
-  sed -e "s|@SiteUrl@|$SiteUrl|g" -e "s|@Site_DocRoot@|$DocRoot|g" "$vhost_config" >"${VHostsDir}/$1.conf"
+  addStarterFilesAndVhostConfig "${SiteUrl}" "${DocRoot}" "${LogsDir}" "${TemplateDir}"
+  generateSslCertificate "${SiteUrl}" || return
 
   # Display results
   printf "\nVirtual Hosts updated in Apache config.\n"
