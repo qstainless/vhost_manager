@@ -5,7 +5,7 @@
 **Version:** 1.2
 
 ## Description
-This script automates the process of creating and deleting virtual hosts for local web development on macOS (Apple Silicon). It is designed to work within a macOS environment, using Homebrew services for managing Apache and PHP services. The script assumes a specific development environment setup as described in [this guide](https://getgrav.org/blog/macos-sonoma-apache-multiple-php-versions).
+This script automates the process of creating and deleting virtual hosts for local web development on macOS (Apple Silicon). It is designed to work within a macOS environment, using Homebrew services for managing Apache and PHP services. The script assumes a specific development environment setup as described in [this guide](https://getgrav.org/blog/macos-sequoia-apache-multiple-php-versions)).
 
 ## Features
 - **Create a new virtual host** by setting up the necessary Apache configuration, creating document root directories, and creating sample files (.htaccess, index.php, and info.php). Permissions are set accordingly, and Apache and PHP services are restarted to apply changes.
