@@ -1,8 +1,8 @@
 # vhost_manager.zsh
 
-**Author:** Queue Stainless  
-**Date:** Mar 28, 2024  
-**Version:** 1.2
+**Author:** Queue Stainless
+**Date:** Jul 31, 2026
+**Version:** 1.3
 
 ## Description
 This script automates the process of creating and deleting virtual hosts for local web development on macOS (Apple Silicon). It is designed to work within a macOS environment, using Homebrew services for managing Apache and PHP services. The script assumes a specific development environment setup as described in [this guide](https://getgrav.org/blog/macos-sequoia-apache-multiple-php-versions)).
