@@ -8,7 +8,7 @@
 This script automates the process of creating and deleting virtual hosts for local web development on macOS (Apple Silicon). It is designed to work within a macOS environment, using Homebrew services for managing Apache and PHP services. The script assumes a specific development environment setup as described in [this guide](https://getgrav.org/blog/macos-sequoia-apache-multiple-php-versions)).
 
 ## Features
-- **Create a new virtual host** by setting up the necessary Apache configuration, creating document root directories, and creating sample files (.htaccess, index.php, and info.php). Permissions are set accordingly, and Apache and PHP services are restarted to apply changes.
+- **Create a new virtual host** by setting up the necessary Apache configuration, creating a boilerplate document root directory (`public`), and configuring the local test site for HTTPS with a locally generated SSL certificate. Permissions are set accordingly, and Apache and PHP services are restarted to apply the changes.
 - **Delete an existing virtual host** by removing its Apache configuration and moving its document root directory to the system's Trash. Services are restarted afterward to reflect the changes.
 - The script **performs safety checks** before operations, such as confirming the deletion of virtual hosts and checking for the existence of hosts before creating new ones.
 
@@ -28,7 +28,7 @@ This script automates the process of creating and deleting virtual hosts for loc
 - Before running the script, ensure that the environmental variables (`SitesDir`, `VHostsDir`, etc.) at the beginning of the script are configured to match your system's directory structure and preferences.
 - Execute permissions must be set for this script (`chmod +x vhost_manager.zsh`).
 - Run the script with appropriate permissions, especially if modifying system-wide configuration files or restarting system services.
-- Virtual host configuration (`.conf`), `.htaccess`, `index.php`, and `info.php` files are generated from the samples included in the `_template` directory for use in creating new virtual hosts.
+- Virtual host configuration (`.conf`) and a boilerplate document root (`/public`) are generated from the templates in the `__templates` directory when creating new virtual hosts.
 
 ## Disclaimer
 This script is provided "as is", without warranty of any kind. Use it at your own risk. The author assumes no responsibility for any consequences that may arise from its use.
