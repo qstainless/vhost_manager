@@ -30,11 +30,11 @@ confirmDeletion() {
 
 confirmCreation() {
   printf "You are about to create a virtual host for %b%s%b. Continue? [y/N]: " \
-    "${ColorWhite}" "$1" "${ColorReset}"
+    "${ColorWhite}" "${1}" "${ColorReset}"
 
   read -r confirm
 
-  if [[ ! $confirm =~ ^[Yy]$ ]]; then
+  if [[ ! ${confirm} =~ ^[Yy]$ ]]; then
     printf "%bOperation cancelled.%b\n" \
       "${ColorWhite}" "${ColorReset}"
 
@@ -45,12 +45,12 @@ confirmCreation() {
 }
 
 setSiteUrl() {
-  local inputSiteName="$1"
+  local inputSiteName="${1}"
   # Default extension
   SiteExtension="test"
 
   # Check if the site name contains a period indicating an extension
-  if [[ "$inputSiteName" == *.* ]]; then
+  if [[ "${inputSiteName}" == *.* ]]; then
     SiteUrl="$inputSiteName"
     SiteExtension="${inputSiteName##*.}"
   else
@@ -78,14 +78,14 @@ restartServices() {
 }
 
 checkExtension() {
-  local baseName="$1"
+  local baseName="${1}"
   local siteUrl="" # Initialize siteUrl as empty
 
   # Debugging aid
-  printf "Checking extension for: %s" "$baseName" >&2
+  printf "Checking extension for: %s... " "${baseName}" >&2
 
-  if [[ "$baseName" == *.* ]]; then
-    siteUrl="$baseName"
+  if [[ "${baseName}" == *.* ]]; then
+    siteUrl="${baseName}"
   else
     local found=false
 
@@ -93,42 +93,42 @@ checkExtension() {
     setopt localoptions null_glob
 
     for siteDir in "${SitesDir}/${baseName}".*; do
-      if [[ -d "$siteDir" ]]; then
-        siteUrl=$(basename "$siteDir") # Found the directory, update siteUrl
+      if [[ -d "${siteDir}" ]]; then
+        siteUrl=$(basename "${siteDir}") # Found the directory, update siteUrl
         found=true
         # Debugging aid
-        printf "Found directory: %s" "$siteDir" >&2
+        printf "Found directory: %s" "${siteDir}" >&2
         break # Assuming you only need the first match
       fi
     done
 
     # No need to explicitly unset null_glob due to localoptions
     if ! $found; then
-      printf "No matching directory found for %s with any extension." "$baseName"
+      printf "No matching directory found for %s with any extension." "${baseName}"
     fi
   fi
 
   # Only echo the siteUrl if found, to avoid influencing the script's flow with unintended output
-  if [[ -n "$siteUrl" ]]; then
-    echo "$siteUrl"
+  if [[ -n "${siteUrl}" ]]; then
+    echo "${siteUrl}"
   fi
 }
 
 deleteVirtualHost() {
-  local baseName="$1"
+  local baseName="${1}"
 
   # Echo for debugging; remove or comment out after confirming it works
-  printf "Deleting virtual host for: %s" \
-    "$baseName"
+  printf "Deleting virtual host for: %s\n" \
+    "${baseName}.test"
 
   # Attempt to determine the full site URL
   local siteUrl
-  siteUrl=$(checkExtension "$baseName")
+  siteUrl=$(checkExtension "${baseName}")
 
   # If siteUrl is empty, report no virtual host found
-  if [[ -z "$siteUrl" ]]; then
+  if [[ -z "${siteUrl}" ]]; then
     printf "No virtual host found for %b%s%b.\n" \
-      "${ColorWhite}" "$baseName" "${ColorReset}"
+      "${ColorWhite}" "${baseName}" "${ColorReset}"
     return
   fi
 
@@ -140,7 +140,7 @@ deleteVirtualHost() {
 
   read -r confirm
 
-  if [[ ! $confirm =~ ^[Yy]$ ]]; then
+  if [[ ! ${confirm} =~ ^[Yy]$ ]]; then
     printf "%bOperation cancelled.%b\n" "${ColorWhite}" "${ColorReset}"
     return
   fi
@@ -163,18 +163,18 @@ deleteVirtualHost() {
 }
 
 checkDir() {
-  if [[ ! -d "$1" ]]; then
+  if [[ ! -d "${1}" ]]; then
     printf "\nDirectory %b%s%b created.\n" \
-      "${ColorWhite}" "$1" "${ColorReset}"
+      "${ColorWhite}" "${1}" "${ColorReset}"
 
-    mkdir -p "$1"
+    mkdir -p "${1}"
   fi
 }
 
 checkVhost() {
-  if [[ -f "$1" ]]; then
+  if [[ -f "${1}" ]]; then
     printf "Virtual host for %b%s%b already exists.\n" \
-      "${ColorWhite}" "$SiteUrl" "${ColorReset}"
+      "${ColorWhite}" "${SiteUrl}" "${ColorReset}"
 
     return 1
   fi
@@ -182,9 +182,9 @@ checkVhost() {
 
 createVirtualHost() {
   # Extract site name and check for an extension
-  setSiteUrl "$1"
+  setSiteUrl "${1}"
 
-  confirmCreation "$SiteUrl" || return
+  confirmCreation "${SiteUrl}" || return
 
   local DocRoot="${SitesDir}/${SiteUrl}/public"
   local LogsDir="${SitesDir}/_ApacheLogs"
@@ -232,25 +232,25 @@ createVirtualHost() {
 
 # Main logic to parse arguments and call the appropriate function
 if [[ $# -ne 2 ]]; then
-  printf "Usage: %s -n site_name (to create new) | -d site_name (to delete)\n" "$0"
+  printf "Usage: %s -n site_name (to create new) | -d site_name (to delete)\n" "${0}"
   exit 1
 fi
 
 # Parse arguments
 while getopts ":n:d:" opt; do
-  case $opt in
+  case ${opt} in
   n)
-    createVirtualHost "$OPTARG"
+    createVirtualHost "${OPTARG}"
     ;;
   d)
-    deleteVirtualHost "$OPTARG"
+    deleteVirtualHost "${OPTARG}"
     ;;
   \?)
-    printf "Invalid option: -%s\n" "$OPTARG"
+    printf "Invalid option: -%s\n" "${OPTARG}"
     exit 1
     ;;
   :)
-    printf "Option -%s requires an argument.\n" "$OPTARG"
+    printf "Option -%s requires an argument.\n" "${OPTARG}"
     exit 1
     ;;
   esac
